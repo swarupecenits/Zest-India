@@ -6,7 +6,12 @@ export const appwriteConfig = {
     projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!,
     platform: "com.swarup.zestIndia",
     databaseId: '693f1bb700009affc37b',
+    bucketId: '693fd025002b9cfff7df',
     userCollectionId: 'user',
+    categoriesCollectionId: 'categories',
+    menuCollectionId: 'menu',
+    customizationsCollectionId: 'customizations',
+    menuCustomizationsCollectionId: 'menu_customizations'
 }
 
 export const client = new Client();
@@ -20,7 +25,7 @@ export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);
 const avatars = new Avatars(client);
-
+ 
 export const createUser = async ({ email, password, username }: CreateUserPrams) => {
     try {
         const newAccount = await account.create(ID.unique(), email, password, username)
@@ -28,7 +33,7 @@ export const createUser = async ({ email, password, username }: CreateUserPrams)
 
         await signIn({ email, password });
 
-        const avatarUrl = avatars.getInitialsURL(username);
+        const avatarUrl = avatars.getInitialsURL(username).toString();
 
         return await databases.createDocument(
             appwriteConfig.databaseId,
@@ -69,3 +74,67 @@ export const getCurrentUser = async () => {
     }
 }
 
+
+export const getMenu = async ({ category, query }: GetMenuParams) => {
+    try {
+        const queries: string[] = [];
+
+        if(category) queries.push(Query.equal('categories', category));
+        if(query) queries.push(Query.search('name', query));
+
+        const menus = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.menuCollectionId,
+            queries,
+        )
+
+        return menus.documents;
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
+
+export const getCategories = async () => {
+    try {
+        const categories = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.categoriesCollectionId,
+        )
+
+        return categories.documents;
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
+
+export const updateUser = async (userId: string, data: {
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: number;
+    address?: string;
+    avatar?: string;
+    DOB?: string;
+    ID?: number;
+}) => {
+    try {
+        const updatedUser = await databases.updateDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.userCollectionId,
+            userId,
+            data
+        );
+
+        return updatedUser;
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
+
+export const signOut = async () => {
+    try {
+        await account.deleteSession('current');
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}

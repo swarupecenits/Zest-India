@@ -58,99 +58,134 @@ async function clearStorage(): Promise<void> {
 }
 
 async function uploadImageToStorage(imageUrl: string) {
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
+    try {
+        console.log('Uploading image:', imageUrl);
+        const response = await fetch(imageUrl);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.statusText}`);
+        }
+        
+        const blob = await response.blob();
 
-    const fileObj = {
-        name: imageUrl.split("/").pop() || `file-${Date.now()}.jpg`,
-        type: blob.type,
-        size: blob.size,
-        uri: imageUrl,
-    };
+        const fileObj = {
+            name: imageUrl.split("/").pop() || `file-${Date.now()}.png`,
+            type: blob.type || 'image/png',
+            size: blob.size,
+            uri: imageUrl,
+        };
 
-    const file = await storage.createFile(
-        appwriteConfig.bucketId,
-        ID.unique(),
-        fileObj
-    );
+        console.log('Creating file in storage:', fileObj.name);
+        const file = await storage.createFile(
+            appwriteConfig.bucketId,
+            ID.unique(),
+            fileObj as any
+        );
 
-    return storage.getFileViewURL(appwriteConfig.bucketId, file.$id);
+        const fileUrl = `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.bucketId}/files/${file.$id}/view?project=${appwriteConfig.projectId}`;
+        console.log('Image uploaded successfully:', file.$id);
+        return fileUrl;
+    } catch (error) {
+        console.error('Error uploading image:', imageUrl, error);
+        throw error; // Don't use fallback, let it fail so we can see the real issue
+    }
 }
 
 async function seed(): Promise<void> {
-    // 1. Clear all
-    await clearAll(appwriteConfig.categoriesCollectionId);
-    await clearAll(appwriteConfig.customizationsCollectionId);
-    await clearAll(appwriteConfig.menuCollectionId);
-    await clearAll(appwriteConfig.menuCustomizationsCollectionId);
-    await clearStorage();
+    try {
+        console.log('🌱 Starting seed process...');
+        
+        // 1. Clear all
+        console.log('📦 Clearing collections and storage...');
+        await clearAll(appwriteConfig.categoriesCollectionId);
+        await clearAll(appwriteConfig.customizationsCollectionId);
+        await clearAll(appwriteConfig.menuCollectionId);
+        await clearAll(appwriteConfig.menuCustomizationsCollectionId);
+        console.log('✅ Collections cleared');
 
-    // 2. Create Categories
-    const categoryMap: Record<string, string> = {};
-    for (const cat of data.categories) {
-        const doc = await databases.createDocument(
-            appwriteConfig.databaseId,
-            appwriteConfig.categoriesCollectionId,
-            ID.unique(),
-            cat
-        );
-        categoryMap[cat.name] = doc.$id;
-    }
-
-    // 3. Create Customizations
-    const customizationMap: Record<string, string> = {};
-    for (const cus of data.customizations) {
-        const doc = await databases.createDocument(
-            appwriteConfig.databaseId,
-            appwriteConfig.customizationsCollectionId,
-            ID.unique(),
-            {
-                name: cus.name,
-                price: cus.price,
-                type: cus.type,
-            }
-        );
-        customizationMap[cus.name] = doc.$id;
-    }
-
-    // 4. Create Menu Items
-    const menuMap: Record<string, string> = {};
-    for (const item of data.menu) {
-        const uploadedImage = await uploadImageToStorage(item.image_url);
-
-        const doc = await databases.createDocument(
-            appwriteConfig.databaseId,
-            appwriteConfig.menuCollectionId,
-            ID.unique(),
-            {
-                name: item.name,
-                description: item.description,
-                image_url: uploadedImage,
-                price: item.price,
-                rating: item.rating,
-                calories: item.calories,
-                protein: item.protein,
-                categories: categoryMap[item.category_name],
-            }
-        );
-
-        menuMap[item.name] = doc.$id;
-
-        // 5. Create menu_customizations
-        for (const cusName of item.customizations) {
-            await databases.createDocument(
+        // 2. Create Categories
+        console.log('📝 Creating categories...');
+        const categoryMap: Record<string, string> = {};
+        for (const cat of data.categories) {
+            const doc = await databases.createDocument(
                 appwriteConfig.databaseId,
-                appwriteConfig.menuCustomizationsCollectionId,
+                appwriteConfig.categoriesCollectionId,
+                ID.unique(),
+                cat
+            );
+            categoryMap[cat.name] = doc.$id;
+            console.log(`  ✓ Created category: ${cat.name}`);
+        }
+        console.log(`✅ Created ${Object.keys(categoryMap).length} categories`);
+
+        // 3. Create Customizations
+        console.log('📝 Creating customizations...');
+        const customizationMap: Record<string, string> = {};
+        for (const cus of data.customizations) {
+            const doc = await databases.createDocument(
+                appwriteConfig.databaseId,
+                appwriteConfig.customizationsCollectionId,
                 ID.unique(),
                 {
-                    menu: doc.$id,
-                    customizations: customizationMap[cusName],
+                    name: cus.name,
+                    price: cus.price,
+                    type: cus.type,
                 }
             );
+            customizationMap[cus.name] = doc.$id;
+            console.log(`  ✓ Created customization: ${cus.name}`);
         }
-    }
+        console.log(`✅ Created ${Object.keys(customizationMap).length} customizations`);
 
-    console.log("✅ Seeding complete.");
+        // 4. Create Menu Items
+        console.log('📝 Creating menu items...');
+        const menuMap: Record<string, string> = {};
+        for (const item of data.menu) {
+            console.log(`  Processing: ${item.name}`);
+
+            const doc = await databases.createDocument(
+                appwriteConfig.databaseId,
+                appwriteConfig.menuCollectionId,
+                ID.unique(),
+                {
+                    name: item.name,
+                    description: item.description,
+                    image_url: item.image_url,
+                    price: item.price,
+                    rating: item.rating,
+                    calories: item.calories,
+                    protein: item.protein,
+                    categories: categoryMap[item.category_name],
+                }
+            );
+
+            menuMap[item.name] = doc.$id;
+            console.log(`  ✓ Created menu item: ${item.name}`);
+
+            // 5. Create menu_customizations
+            for (const cusName of item.customizations) {
+                await databases.createDocument(
+                    appwriteConfig.databaseId,
+                    appwriteConfig.menuCustomizationsCollectionId,
+                    ID.unique(),
+                    {
+                        menu: doc.$id,
+                        customizations: customizationMap[cusName],
+                    }
+                );
+            }
+            console.log(`  ✓ Added ${item.customizations.length} customizations for ${item.name}`);
+        }
+        console.log(`✅ Created ${Object.keys(menuMap).length} menu items`);
+
+        console.log("✅ Seeding complete!");
+    } catch (error) {
+        console.error('❌ Seeding failed:', error);
+        throw error;
+    }
 }
 
 export default seed;
+
+
+// <Button title='seed' onPress={()=>seed().catch((error)=>console.error("❌ Seed error:", error))}/>
