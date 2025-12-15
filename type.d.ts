@@ -93,7 +93,7 @@ interface ProfileFieldProps {
 interface CreateUserPrams {
     email: string;
     password: string;
-    name: string;
+    username: string;
 }
 
 interface SignInParams {
