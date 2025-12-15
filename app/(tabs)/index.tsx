@@ -1,20 +1,67 @@
 import { offers, images } from "@/constants";
-import { Fragment } from "react";
-import { FlatList, Pressable, View, Text, Image, TouchableOpacity } from "react-native";
+import { Fragment, useState, useEffect } from "react";
+import { FlatList, Pressable, View, Text, Image, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import cn from "clsx";
 import CartButton from "@/components/CartButton";
 import useAuthStore from "@/store/auth.store";
+import * as Location from 'expo-location';
 
 export default function Index() {
   const { user } = useAuthStore();
+  const [location, setLocation] = useState<string>("Silchar");
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
     if (hour < 17) return "Good Afternoon";
     return "Good Evening";
+  };
+
+  const getCurrentLocation = async () => {
+    try {
+      setIsLoadingLocation(true);
+      
+      // Request permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Denied',
+          'Location permission is required to use this feature.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Get current position
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      // Reverse geocode to get address
+      const [address] = await Location.reverseGeocodeAsync({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+
+      if (address) {
+        const locationName = address.city || address.subregion || address.region || 'Unknown Location';
+        setLocation(locationName);
+        Alert.alert('Location Updated', `Delivering to ${locationName}`);
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to get current location. Please try again.',
+        [{ text: 'OK' }]
+      );
+      console.error('Location error:', error);
+    } finally {
+      setIsLoadingLocation(false);
+    }
   };
 
   return (
@@ -75,12 +122,30 @@ export default function Index() {
             {/* Delivery Location */}
             <View className="flex-start mb-5">
               <Text className="small-bold text-primary">DELIVER TO</Text>
-              <TouchableOpacity className="flex-center flex-row gap-x-1 mt-0.5">
-                <Text className="paragraph-bold text-dark-100">Silchar</Text>
-                <Image source={images.arrowDown}
-                  className="size-3"
-                  resizeMode="contain" />
-              </TouchableOpacity>
+              <View className="flex-row items-center gap-x-3 mt-0.5">
+                <TouchableOpacity className="flex-center flex-row gap-x-1">
+                  <Text className="paragraph-bold text-dark-100">{location}</Text>
+                  <Image source={images.arrowDown}
+                    className="size-3"
+                    resizeMode="contain" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  onPress={getCurrentLocation}
+                  disabled={isLoadingLocation}
+                  className="flex-row items-center gap-x-1.5 bg-primary px-3 py-2 rounded-full"
+                  activeOpacity={0.7}
+                >
+                  {isLoadingLocation ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <>
+                     
+                      <Text className="small-semibold text-sm text-white">Use Current Location</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         )}

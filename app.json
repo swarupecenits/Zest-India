@@ -7,7 +7,7 @@
     "icon": "./assets/images/logo.png",
     "scheme": "fastfood",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/logo.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.swarupcsenits.zest_india"
     },
     "web": {
       "bundler": "metro",
@@ -49,6 +50,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "74cb5fe4-fdc0-4ac2-bb9c-c088cfcf122d"
+      }
     }
   }
 }
