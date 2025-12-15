@@ -38,17 +38,9 @@ const Profile = () => {
   // Sync currentAvatar with user.avatar when user changes
   useEffect(() => {
     if (user?.avatar) {
-      console.log('User avatar from state:', user.avatar);
-      console.log('Setting avatar from user:', user.avatar);
       setCurrentAvatar(user.avatar);
     }
   }, [user?.avatar]);
-
-  // Debug current state
-  useEffect(() => {
-    console.log('Current avatar state:', currentAvatar);
-    console.log('Current user:', user);
-  }, [currentAvatar, user]);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -85,7 +77,6 @@ const Profile = () => {
         uri: uri,
       };
 
-      console.log('Uploading file:', fileObj.name);
       const file = await storage.createFile(
         appwriteConfig.bucketId,
         ID.unique(),
@@ -93,16 +84,11 @@ const Profile = () => {
         ['read("any")']  // Grant read permission to anyone
       );
 
-      console.log('File uploaded, ID:', file.$id);
-
       // Use file view instead of preview (preview requires paid plan for transformations)
       const avatarUrl = `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.bucketId}/files/${file.$id}/view?project=${appwriteConfig.projectId}`;
 
-      console.log('Generated avatar URL:', avatarUrl);
-
       // Auto-save avatar
       const updatedUser = await updateUser(user.$id, { avatar: avatarUrl });
-      console.log('Updated user avatar in DB:', updatedUser.avatar);
       
       setUser(updatedUser as any);
       setCurrentAvatar(avatarUrl);
@@ -110,7 +96,6 @@ const Profile = () => {
       
       Alert.alert('Success', 'Profile picture updated successfully!');
     } catch (error: any) {
-      console.error('Upload error:', error);
       Alert.alert('Error', error.message || 'Failed to upload image');
     } finally {
       setUploadingImage(false);
@@ -211,9 +196,6 @@ const Profile = () => {
                 source={{ uri: currentAvatar }}
                 className="size-full rounded-full bg-gray-100"
                 resizeMode="cover"
-                onLoadStart={() => console.log('Image loading started:', currentAvatar)}
-                onLoad={() => console.log('Image loaded successfully')}
-                onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
               />
             ) : (
               <View className="size-full rounded-full bg-gray-200 items-center justify-center">
