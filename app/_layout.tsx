@@ -25,7 +25,8 @@ Sentry.init({
   // spotlight: __DEV__,
 });
 
-export default (function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
+  const { isLoading, fetchAuthenticatedUser } = useAuthStore();
 
   const [fontsLoaded,error] = useFonts({
     "QuickSand-Bold": require('../assets/fonts/Quicksand-Bold.ttf'),
@@ -35,7 +36,6 @@ export default (function RootLayout() {
     "QuickSand-Light": require('../assets/fonts/Quicksand-Light.ttf'),
   });
 
-  const fetchAuthenticatedUser = useAuthStore((state) => state.fetchAuthenticatedUser);
 
   useEffect(() => {
     if(error) throw error;
@@ -45,6 +45,8 @@ export default (function RootLayout() {
       fetchAuthenticatedUser();
     }
   }, [fontsLoaded, error, fetchAuthenticatedUser]);
+
+  if(!fontsLoaded || isLoading) return null;
 
   return <Stack screenOptions={{headerShown:false}}/>;
 });
