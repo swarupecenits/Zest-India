@@ -23,6 +23,7 @@ A modern, full-featured food delivery application built with React Native and Ex
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **React Native** - Cross-platform mobile development
 - **Expo** - Development platform and build tools
 - **TypeScript** - Type-safe code
@@ -31,11 +32,13 @@ A modern, full-featured food delivery application built with React Native and Ex
 - **Zustand** - Lightweight state management
 
 ### Backend & Services
+
 - **Appwrite** - Backend-as-a-Service (Authentication, Database, Storage)
 - **Expo Location** - Geolocation and reverse geocoding
 - **Sentry** - Error tracking and monitoring
 
 ### UI Components & Libraries
+
 - **React Native Gesture Handler** - Touch gestures
 - **React Native Reanimated** - Smooth animations
 - **React Native SVG** - SVG rendering
@@ -96,6 +99,7 @@ npm start
 ```
 
 This will open Expo DevTools. You can then:
+
 - Press **a** to open on Android emulator
 - Press **i** to open on iOS simulator
 - Scan QR code with Expo Go app on your physical device
@@ -224,17 +228,21 @@ zest_india/
 ### Common Issues
 
 **Build Errors with New Architecture:**
+
 - Disable New Architecture in `app.json`: `"newArchEnabled": false`
 
 **Location Not Working:**
+
 - Grant location permissions in device settings
 - Ensure Expo Location is properly installed
 
 **Images Not Loading:**
+
 - Check Appwrite storage bucket permissions
 - Verify file IDs are correct
 
 **Metro Bundler Errors:**
+
 - Clear cache: `npx expo start -c`
 - Reinstall dependencies: `rm -rf node_modules && npm install`
 
@@ -245,6 +253,7 @@ This project is private and proprietary.
 ## 👨‍💻 Author
 
 **Swarup Kumar**
+
 - GitHub: [@swarupecenits](https://github.com/swarupecenits)
 
 ## 🙏 Acknowledgments
@@ -256,4 +265,4 @@ This project is private and proprietary.
 
 ---
 
-Made with ❤️ for food lovers everywhere
+Made with ❤️ By Swarup Chanda
