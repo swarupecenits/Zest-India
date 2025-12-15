@@ -252,7 +252,7 @@ This project is private and proprietary.
 
 ## 👨‍💻 Author
 
-**Swarup Kumar**
+**Swarup Chanda**
 
 - GitHub: [@swarupecenits](https://github.com/swarupecenits)
 
