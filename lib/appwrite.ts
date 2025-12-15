@@ -11,7 +11,8 @@ export const appwriteConfig = {
     categoriesCollectionId: 'categories',
     menuCollectionId: 'menu',
     customizationsCollectionId: 'customizations',
-    menuCustomizationsCollectionId: 'menu_customizations'
+    menuCustomizationsCollectionId: 'menu_customizations',
+    ordersCollectionId: 'orders'
 }
 
 export const client = new Client();
@@ -134,6 +135,65 @@ export const updateUser = async (userId: string, data: {
 export const signOut = async () => {
     try {
         await account.deleteSession('current');
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
+
+// Orders
+export const createOrder = async (orderData: any) => {
+    try {
+        const order = await databases.createDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.ordersCollectionId,
+            ID.unique(),
+            {
+                ...orderData,
+                items: JSON.stringify(orderData.items) // Convert array to JSON string
+            }
+        );
+
+        return order;
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
+
+export const getUserOrders = async (userId: string) => {
+    try {
+        const orders = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.ordersCollectionId,
+            [
+                Query.equal('userId', userId),
+                Query.orderDesc('$createdAt'),
+                Query.limit(100)
+            ]
+        );
+
+        // Parse items JSON string back to array
+        return orders.documents.map(order => ({
+            ...order,
+            items: JSON.parse(order.items as string)
+        }));
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
+
+export const getOrderById = async (orderId: string) => {
+    try {
+        const order = await databases.getDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.ordersCollectionId,
+            orderId
+        );
+
+        // Parse items JSON string back to array
+        return {
+            ...order,
+            items: JSON.parse(order.items as string)
+        };
     } catch (e) {
         throw new Error(e as string);
     }

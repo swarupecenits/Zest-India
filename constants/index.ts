@@ -39,6 +39,7 @@ import pizzaOne from "@/assets/images/pizza-one.png";
 import salad from "@/assets/images/salad.png";
 import success from "@/assets/images/success.png";
 import tomatoes from "@/assets/images/tomatoes.png";
+import swarupQr from "@/assets/images/swarup_qr.png";
 
 export const CATEGORIES = [
     {
@@ -178,6 +179,7 @@ export const images = {
     salad,
     success,
     tomatoes,
+    swarupQr,
     arrowBack,
     backArrow: arrowBack,
     arrowDown,
